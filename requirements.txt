@@ -4,3 +4,4 @@ molecule==2.20.1
 python-vagrant
 testinfra==3.3.0
 docker==4.2.0
+jmespath==0.10.0
