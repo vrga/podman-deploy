@@ -1,0 +1,103 @@
+- name:       dump pod config to file
+  copy:
+    dest:    "{{ role_data_dir }}/pod-{{ item.name }}.json"
+    content: "{{ item | to_nice_json }}"
+  loop: "{{ pods }}"
+  register:   _pod_config
+  tags:
+    - podman
+    - pods
+
+- import_tasks: ./_manage_volumes.yml
+  vars:
+    _containers: "{{ pods | json_query('[].containers[]') | list }}"
+
+- name:       set pod service
+  template:
+    src:  "systemd-pod.service.j2"
+    dest: "/etc/systemd/system/pod-{{ item.name }}.service"
+    mode: 0664
+  loop: "{{ pods }}"
+  register:   _pod_services_modified
+  tags:
+    - podman
+    - pods
+
+- name:     set pod container services
+  template:
+    src:  "systemd-pod-container.service.j2"
+    dest: "/etc/systemd/system/pod-container-{{ item.1.name }}.service"
+    mode: 0664
+  loop:     "{{ pods | subelements('containers') }}"
+  register: _pod_container_services_modified
+  tags:
+    - podman
+    - pods
+
+- debug:
+    var: _pod_services_modified
+
+- name:          stop modified pod service # noqa 503
+  systemd:
+    name:  "pod-{{ item.item.name }}"
+    state: stopped
+  when:          item.changed
+  ignore_errors: yes
+  loop:    "{{ _pod_services_modified.results }}"
+  tags:
+    - podman
+    - pods
+
+- name:          stop modified pod container service # noqa 503
+  systemd:
+    name:  "pod-container-{{ item.item.1.name }}"
+    state: stopped
+  when:          item.changed
+  ignore_errors: yes
+  loop:    "{{ _pod_container_services_modified.results }}"
+  tags:
+    - podman
+    - pods
+
+
+- name:       "enable pod service"
+  systemd:
+    daemon_reload: yes
+    name:          "pod-{{ item.name }}"
+    enabled:       "{{ item.enabled | default(False) }}"
+  loop: "{{ pods }}"
+  tags:
+    - podman
+    - pods
+
+- name: "enable pod container service"
+  systemd:
+    daemon_reload: yes
+    name:          "pod-container-{{ item.1.name }}"
+    enabled:       "{{ item.1.enabled | default(False) }}"
+  loop: "{{ pods | subelements('containers') }}"
+  tags:
+    - podman
+    - pods
+
+- name:       "start pod services"
+  systemd:
+    daemon_reload: yes
+    name:          "pod-{{ item.name }}"
+    state:         '{% if item.running | default(False) %}started{% else %}stopped{% endif %}'
+  with_items: "{{ pods }}"
+  when:       item.running is defined
+  tags:
+    - podman
+    - pods
+
+- name: "start pod container services"
+  systemd:
+    daemon_reload: yes
+    name:          "pod-container-{{ item.1.name }}"
+    state:         '{% if item.1.running | default(False) %}started{% else %}stopped{% endif %}'
+  loop: "{{ pods | subelements('containers') }}"
+  when: item.1.running is defined
+  tags:
+    - podman
+    - pods

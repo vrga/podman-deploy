@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+# Pod definition for pod: {{ item.name | mandatory }}
+[Unit]
+Description=Podman pod-{{ item.name | mandatory }}.service
+Documentation=man:podman-generate-systemd(1)
+Wants=network.target
+After=network-online.target
+{#Requires={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}#}
+Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+ExecStartPre=/bin/rm -f %t/%n-pid
+ExecStartPre=-/usr/bin/podman pod rm --ignore -f {{ item.name }}
+ExecStartPre=/usr/bin/podman pod create \
+{% if item.network is defined %}--network {{ item.network }} \
+{% endif -%}
+--infra-conmon-pidfile %t/%n-pid \
+{% for expose in item.exposes | default([]) -%}
+    -p {{ expose }} \
+{% endfor -%}
+--name {{ item.name | mandatory }}
+ExecStart=/usr/bin/podman pod start {{ item.name }}
+ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t 10
+ExecStopPost=/usr/bin/podman rm {{ item.name }}
+PIDFile=%t/%n-pid
+KillMode=none
+Type=forking
+
+[Install]
+WantedBy=multi-user.target default.target

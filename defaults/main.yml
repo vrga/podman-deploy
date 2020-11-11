@@ -1,0 +1,33 @@
+---
+role_data_dir:          /etc/containers/ansible_podman
+
+containers: [ ]
+# containers example:
+# containers:
+#   - name: pihole
+#     image: docker.io/pihole/pihole:latest
+#     network: podman
+#     user: 20001
+#     group: 20001
+#     exposes:
+#       - 127.0.0.1:8053:53/tcp
+#       - 127.0.0.1:8053:53/udp
+#       - 127.0.0.1:8091:80
+#       - 127.0.0.1:8092:443
+#     container_environment:
+#       - ServerIP="10.88.1.1"
+#       - DNS1="1.1.1.1"
+#       - DNS2="8.8.8.8"
+#       - VIRTUAL_HOST="pihole.testing.lan"
+#     mounts:
+#       - /etc/localtime:/etc/localtime:ro
+#       - /etc/timezone:/etc/timezone:ro
+#       - /opt/pihole/etc/pihole/:/etc/pihole/
+#       - /opt/pihole/etc/dnsmasq.d/:/etc/dnsmasq.d/
+
+pods: [ ]
+
+
+container_storage_root: "/opt/"
+container_dirs: [ ]
+pull_disabled:          no

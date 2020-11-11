@@ -1,0 +1,35 @@
+---
+- name: set required images
+  set_fact:
+    _required_images: "{{ (containers | json_query('[].image') | list + pods | json_query('[].containers[].image') | list) | unique}}"
+
+- name:          check if image exists.
+  shell:         'podman image exists "{{ item }}"'
+  register:      _image_exists
+  loop:          "{{ _required_images }}"
+  ignore_errors: True
+
+- debug:
+    var: _image_exists
+
+- name:        "pull images" # noqa 301
+  shell:       'podman image pull "{{ item.item }}"'
+  loop:        "{{ _image_exists.results }}"
+  when:        not pull_disabled and item.rc != 0 and not item.item.startswith('localhost/')
+  environment: "{{ proxy_env | default({}) }}"
+  tags:
+    - podman
+    - images
+
+- name: set up config dir for this role
+  file:
+    state: directory
+    path:  "{{ role_data_dir }}"
+    owner: root
+    group: root
+  tags:
+    - podman
+    - configure
+
+- import_tasks: ./systemd_containers.yml
+- import_tasks: ./systemd_pods.yml

@@ -1,0 +1,51 @@
+# {{ ansible_managed }}
+# {{ item.name | mandatory }}
+
+[Unit]
+Description=Podman {{ item.name | mandatory }} service
+Documentation=man:podman-generate-systemd(1)
+Wants=network.target
+After=network-online.target
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT={{ item.name | mandatory }}
+Restart=always
+ExecStartPre=/bin/rm -f /run/{{ item.name | mandatory }}-pid /run/{{ item.name | mandatory }}-cid
+ExecStartPre=-/usr/bin/podman rm {{ item.name | mandatory }}
+ExecStart=/usr/bin/podman run \
+    --conmon-pidfile /run/{{ item.name | mandatory }}-pid \
+    --cidfile /run/{{ item.name | mandatory }}-cid \
+    --cgroups=no-conmon \
+    -d \
+    --name {{ item.name | mandatory }} \
+{% if item.network is defined %}--network {{ item.network }} \
+{% endif -%}
+{% if item.user is defined and item.user != "" and item.group is defined and item.group != "" %}
+    --user {{ item.user }}:{{ item.group }} \
+{% endif -%}
+{% for expose in item.exposes | default([]) %}
+    -p {{ expose }} \
+{% endfor -%}
+{% for envvar in item.environment | default([]) %}
+    -e {{ envvar }} \
+{% endfor -%}
+{% for mount in item.mounts | default([]) %}
+    -v {{ mount }} \
+{% endfor -%}
+{% if item.health is defined %}
+    --health-cmd="{{ item.health.cmd }}" \
+    --health-interval={{ item.health.interval | default('30s') }} \
+    --health-retries={{ item.health.retries | default(3) }} \
+    --health-start-period={{ item.health.grace_period | default('20s') }} \
+    --health-timeout={{ item.health.check_timeouts | default('30s') }} \
+{% endif -%}
+    --log-driver=journald \
+{{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ item.parameters | default('') }}
+ExecStop=-/usr/bin/podman stop --ignore {{ item.name | mandatory }} -t 10
+ExecStopPost=-/usr/bin/podman rm --ignore -f {{ item.name | mandatory }}
+PIDFile=%t/{{ item.name | mandatory }}-pid
+KillMode=none
+Type=forking
+
+[Install]
+WantedBy=multi-user.target default.target

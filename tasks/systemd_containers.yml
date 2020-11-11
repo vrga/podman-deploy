@@ -1,0 +1,62 @@
+---
+- name:       dump container config to file
+  copy:
+    dest:    "{{ role_data_dir }}/{{ item.name }}.json"
+    content: "{{ item | to_nice_json }}"
+  with_items: "{{ containers }}"
+  register:   _container_config
+  tags:
+    - podman
+    - containers
+    - config
+
+- import_tasks: ./_manage_volumes.yml
+  vars:
+    _containers: "{{ containers }}"
+
+- name:       set container service
+  template:
+    src:  "systemd.service.j2"
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+    mode: 0664
+  with_items: "{{ containers }}"
+  register:   _container_services_modified
+  tags:
+    - podman
+    - containers
+    - systemd-set
+
+- name:          stop modified container service # noqa 503
+  systemd:
+    name:  "{{ item.item.name }}"
+    state: stopped
+  when:          item.changed
+  ignore_errors: yes
+  with_items:    "{{ _container_services_modified['results'] }}"
+  tags:
+    - podman
+    - containers
+    - systemd-stop
+
+- name:       "enable container service"
+  systemd:
+    daemon_reload: yes
+    name:          "{{ item.name }}"
+    enabled:       "{{ item.enabled | default(False) }}"
+  with_items: "{{ containers }}"
+  tags:
+    - podman
+    - containers
+    - systemd-enable
+
+- name:       "start container services"
+  systemd:
+    daemon_reload: yes
+    name:          "{{ item.name }}"
+    state:         '{% if item.running | default(False) %}started{% else %}stopped{% endif %}'
+  with_items: "{{ containers }}"
+  when:       item.running is defined
+  tags:
+    - podman
+    - containers
+    - systemd-start

@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author:              Fran Pavelić
+  description:         A not-so-simple podman role to deploy podman services as systemd units on ubuntu 18.04+ and debian 10+.
+  license:             BSD-3-Clause
+  min_ansible_version: 2.8
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+    - name: Debian
+      versions:
+        - buster
+  galaxy_tags:
+    - podman
+    - ubuntu
+    - debian
+    - systemd
+dependencies: [
+#    - vrga.podman
+]

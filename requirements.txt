@@ -1,0 +1,6 @@
+ansible==2.8.8
+molecule==2.20.1
+# molecule[vagrant]
+python-vagrant
+testinfra==3.3.0
+docker==4.2.0
