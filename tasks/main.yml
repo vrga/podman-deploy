@@ -1,16 +1,13 @@
 ---
 - name: set required images
   set_fact:
-    _required_images: "{{ (containers | json_query('[].image') | list + pods | json_query('[].containers[].image') | list) | unique}}"
+    _required_images: "{{ (containers | json_query('[].image') | list + pods | json_query('[].containers[].image') | list) | unique }}"
 
 - name:          check if image exists.
   shell:         'podman image exists "{{ item }}"'
   register:      _image_exists
   loop:          "{{ _required_images }}"
   ignore_errors: True
-
-- debug:
-    var: _image_exists
 
 - name:        "pull images" # noqa 301
   shell:       'podman image pull "{{ item.item }}"'

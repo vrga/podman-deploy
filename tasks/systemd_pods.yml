@@ -10,7 +10,7 @@
 
 - import_tasks: ./_manage_volumes.yml
   vars:
-    _containers: "{{ pods | json_query('[].containers[]') | list }}"
+    _containers: "{{ pods | json_query('[].containers[]') | list | default([]) }}"
 
 - name:       set pod service
   template:
@@ -33,9 +33,6 @@
   tags:
     - podman
     - pods
-
-- debug:
-    var: _pod_services_modified
 
 - name:          stop modified pod service # noqa 503
   systemd:

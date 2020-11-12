@@ -1,10 +1,8 @@
 - name: manage volume mount dirs
   file:
     dest:  "{{ item.1 }}"
-    owner: "{{ item.0.user | default('root') }}"
-    group: "{{ item.0.group | default('root') }}"
     state: directory
-  loop: "{{ _containers | subelements('manage_dirs') }}"
+  loop: "{{ _containers | subelements('manage_dirs', True) }}"
   when: item.1.startswith(container_storage_root)
   tags:
     - podman
@@ -17,7 +15,7 @@
     content: "{{ item.1.content }}"
     owner:   "{{ item.0.user | default('root') }}"
     group:   "{{ item.0.group | default('root') }}"
-  loop: "{{ _containers | subelements('manage_files') }}"
+  loop: "{{ _containers | subelements('manage_files', True) }}"
   when: item.1.path.startswith(container_storage_root)
   tags:
     - podman
@@ -26,7 +24,7 @@
 
 - name:  chown volume mount dirs
   shell: "chown -R {{ item.0.user }}:{{ item.0.group }} {{ item.1 }}"
-  loop:  "{{ _containers | subelements('manage_dirs') }}"
+  loop:  "{{ _containers | subelements('manage_dirs', True) }}"
   when:  ('user' in item.0 and 'group' in item.0) and item.1.startswith(container_storage_root) and not (item.0.user == "root" or item.0.group == "root")
   tags:
     - podman
