@@ -3,14 +3,35 @@
     dest:    "{{ role_data_dir }}/pod-{{ item.name }}.json"
     content: "{{ item | to_nice_json }}"
   loop: "{{ pods }}"
+  loop_control:
+    label: "{{ item.name }}"
   register:   _pod_config
+  vars:
+    query: "[?item.item=='{{ item.image }}'].stdout"
   tags:
-    - podman
+    - podman-deploy
+    - pods
+
+- name:     dump pod container config to file
+  copy:
+    dest:    "{{ role_data_dir }}/pod-{{ item.0.name }}-{{ item.1.name }}.json"
+    content: "{{ item.1 | combine ({ 'image_digest': _image_updated.results | json_query(query) | first }) | to_nice_json }}"
+  loop:     "{{ pods | subelements('containers') }}"
+  loop_control:
+    label: "{{ item.0.name }} | {{ item.1.name }}"
+  register: _pod_container_config
+  vars:
+    query: "[?item.item=='{{ item.1.image }}'].stdout"
+  tags:
+    - podman-deploy
     - pods
 
 - import_tasks: ./_manage_volumes.yml
   vars:
     _containers: "{{ pods | json_query('[].containers[]') | list | default([]) }}"
+  tags:
+    - podman-deploy
+    - pods
 
 - name:       set pod service
   template:
@@ -18,9 +39,11 @@
     dest: "/etc/systemd/system/pod-{{ item.name }}.service"
     mode: 0664
   loop: "{{ pods }}"
+  loop_control:
+    label: "{{ item.name }}"
   register:   _pod_services_modified
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name:     set pod container services
@@ -29,9 +52,11 @@
     dest: "/etc/systemd/system/pod-container-{{ item.1.name }}.service"
     mode: 0664
   loop:     "{{ pods | subelements('containers') }}"
+  loop_control:
+    label: "{{ item.0.name }} | {{ item.1.name }}"
   register: _pod_container_services_modified
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name:          stop modified pod service # noqa 503
@@ -40,9 +65,11 @@
     state: stopped
   when:          item.changed
   ignore_errors: yes
-  loop:    "{{ _pod_services_modified.results }}"
+  loop:    "{{ _pod_config.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name:          stop modified pod container service # noqa 503
@@ -51,9 +78,11 @@
     state: stopped
   when:          item.changed
   ignore_errors: yes
-  loop:    "{{ _pod_container_services_modified.results }}"
+  loop:    "{{ _pod_container_config.results | reverse | list + _pod_container_services_modified.results | reverse | list }}"
+  loop_control:
+    label: "{{ item.item.0.name }} | {{ item.item.1.name }}"
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 
@@ -63,8 +92,10 @@
     name:          "pod-{{ item.name }}"
     enabled:       "{{ item.enabled | default(False) }}"
   loop: "{{ pods }}"
+  loop_control:
+    label: "{{ item.name }}"
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name: "enable pod container service"
@@ -73,8 +104,10 @@
     name:          "pod-container-{{ item.1.name }}"
     enabled:       "{{ item.1.enabled | default(False) }}"
   loop: "{{ pods | subelements('containers') }}"
+  loop_control:
+    label: "{{ item.0.name }} | {{ item.1.name }}"
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name:       "start pod services"
@@ -82,10 +115,12 @@
     daemon_reload: yes
     name:          "pod-{{ item.name }}"
     state:         '{% if item.running | default(False) %}started{% else %}stopped{% endif %}'
-  with_items: "{{ pods }}"
+  loop: "{{ pods }}"
+  loop_control:
+    label: "{{ item.name }}"
   when:       item.running is defined
   tags:
-    - podman
+    - podman-deploy
     - pods
 
 - name: "start pod container services"
@@ -94,7 +129,9 @@
     name:          "pod-container-{{ item.1.name }}"
     state:         '{% if item.1.running | default(False) %}started{% else %}stopped{% endif %}'
   loop: "{{ pods | subelements('containers') }}"
+  loop_control:
+    label: "{{ item.0.name }} | {{ item.1.name }}"
   when: item.1.running is defined
   tags:
-    - podman
+    - podman-deploy
     - pods

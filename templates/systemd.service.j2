@@ -1,20 +1,20 @@
 # {{ ansible_managed }}
-# {{ item.name | mandatory }}
+# Container definition for: {{ item.name | mandatory }}
 
 [Unit]
 Description=Podman {{ item.name | mandatory }} service
-Documentation=man:podman-generate-systemd(1)
-Wants=network.target
-After=network-online.target
+Wants=network.target netfilter-persistent.service
+After=network-online.target netfilter-persistent.service
 
 [Service]
-Environment=PODMAN_SYSTEMD_UNIT={{ item.name | mandatory }}
-Restart=always
-ExecStartPre=/bin/rm -f /run/{{ item.name | mandatory }}-pid /run/{{ item.name | mandatory }}-cid
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart={{ item.restart | default('always') }}
+RestartSec={{ item.restart_sec | default('15s') }}
+ExecStartPre=/bin/rm -f %t/%n-pid %t/%n-cid
 ExecStartPre=-/usr/bin/podman rm {{ item.name | mandatory }}
 ExecStart=/usr/bin/podman run \
-    --conmon-pidfile /run/{{ item.name | mandatory }}-pid \
-    --cidfile /run/{{ item.name | mandatory }}-cid \
+    --conmon-pidfile %t/%n-pid \
+    --cidfile %t/%n-cid \
     --cgroups=no-conmon \
     -d \
     --name {{ item.name | mandatory }} \
@@ -38,12 +38,14 @@ ExecStart=/usr/bin/podman run \
     --health-retries={{ item.health.retries | default(3) }} \
     --health-start-period={{ item.health.grace_period | default('20s') }} \
     --health-timeout={{ item.health.check_timeouts | default('30s') }} \
+{% else %}
+    --no-healthcheck=true \
 {% endif -%}
     --log-driver=journald \
 {{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ item.parameters | default('') }}
 ExecStop=-/usr/bin/podman stop --ignore {{ item.name | mandatory }} -t 10
 ExecStopPost=-/usr/bin/podman rm --ignore -f {{ item.name | mandatory }}
-PIDFile=%t/{{ item.name | mandatory }}-pid
+PIDFile=%t/%n-pid
 KillMode=none
 Type=forking
 

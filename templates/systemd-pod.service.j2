@@ -3,10 +3,10 @@
 [Unit]
 Description=Podman pod-{{ item.name | mandatory }}.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network.target
-After=network-online.target
+Wants=network.target netfilter-persistent.service
+After=network-online.target netfilter-persistent.service
 {#Requires={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}#}
-Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}
+Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ " " if not loop.last }}{% endfor %}
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
@@ -20,10 +20,12 @@ ExecStartPre=/usr/bin/podman pod create \
 {% for expose in item.exposes | default([]) -%}
     -p {{ expose }} \
 {% endfor -%}
+{% if item.share is defined %} --share {{ item.share }} \
+{% endif -%}
 --name {{ item.name | mandatory }}
 ExecStart=/usr/bin/podman pod start {{ item.name }}
 ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t 10
-ExecStopPost=/usr/bin/podman rm {{ item.name }}
+ExecStopPost=/usr/bin/podman pod rm --ignore {{ item.name }}
 PIDFile=%t/%n-pid
 KillMode=none
 Type=forking

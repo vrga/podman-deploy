@@ -1,21 +1,26 @@
 # {{ ansible_managed }}
-# Pod container definition for pod: {{ item.1.name | mandatory }}
+# Pod container definition for pod: {{ item.0.name | mandatory }} container: {{ item.1.name | mandatory }}
 
 [Unit]
-Description=Podman pod pod-container-{{ item.1.name }}.service
-Documentation=man:podman-generate-systemd(1)
-Wants=network.target
-After=network-online.target
+Description=Podman pod: {{ item.0.name | mandatory }} container: {{ item.1.name | mandatory }}
+Wants=network.target netfilter-persistent.service
+After=network-online.target netfilter-persistent.service
 BindsTo=pod-{{ item.0.name | mandatory }}.service
 After=pod-{{ item.0.name | mandatory }}.service
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
-Restart=always
+Restart={{ item.1.restart | default('always') }}
+RestartSec={{ item.1.restart_sec | default('15s') }}
 ExecStartPre=/bin/rm -f %t/%n-pid %t/%n-cid
 ExecStartPre=-/usr/bin/podman rm {{ item.1.name | mandatory }}
-ExecStart=/usr/bin/podman run --conmon-pidfile %t/%n-pid --cidfile %t/%n-cid --cgroups=no-conmon -d --name {{ item.1.name | mandatory }} \
---pod {{ item.0.name }} \
+ExecStart=/usr/bin/podman run \
+    --conmon-pidfile %t/%n-pid \
+    --cidfile %t/%n-cid \
+    --cgroups=no-conmon \
+    -d \
+    --name {{ item.1.name | mandatory }} \
+    --pod {{ item.0.name }} \
 {% if item.1.user is defined and item.1.user != "" and item.1.group is defined and item.1.group != "" -%}
     --user {{ item.1.user }}:{{ item.1.group }} \
 {% endif -%}
@@ -31,6 +36,8 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/%n-pid --cidfile %t/%n-cid --c
     --health-retries={{ item.1.health.retries | default(3) }} \
     --health-start-period={{ item.1.health.grace_period | default('20s') }} \
     --health-timeout={{ item.1.health.check_timeouts | default('30s') }} \
+{% else %}
+    --no-healthcheck=true \
 {% endif -%}
   --log-driver=journald \
 {{ item.1.extra_args | default('') }} {{ item.1.image | mandatory }} {{ item.1.parameters | default('') }}

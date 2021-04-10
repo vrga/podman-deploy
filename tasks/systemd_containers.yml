@@ -1,28 +1,38 @@
 ---
-- name:       dump container config to file
+- name:     dump container config to file
   copy:
     dest:    "{{ role_data_dir }}/{{ item.name }}.json"
-    content: "{{ item | to_nice_json }}"
-  with_items: "{{ containers }}"
-  register:   _container_config
+    content: "{{ item | combine ({ 'image_digest': _image_updated.results | json_query(query) | first }) | to_nice_json }}"
+  loop:     "{{ containers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: _container_config
+  vars:
+    query: "[?item.item=='{{ item.image }}'].stdout"
   tags:
-    - podman
+    - podman-deploy
     - containers
     - config
 
 - import_tasks: ./_manage_volumes.yml
   vars:
     _containers: "{{ containers }}"
+  tags:
+    - podman-deploy
+    - containers
+    - config
 
-- name:       set container service
+- name:     set container service
   template:
     src:  "systemd.service.j2"
     dest: "/etc/systemd/system/{{ item.name }}.service"
     mode: 0664
-  with_items: "{{ containers }}"
-  register:   _container_services_modified
+  loop:     "{{ containers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: _container_services_modified
   tags:
-    - podman
+    - podman-deploy
     - containers
     - systemd-set
 
@@ -32,31 +42,37 @@
     state: stopped
   when:          item.changed
   ignore_errors: yes
-  with_items:    "{{ _container_services_modified['results'] }}"
+  loop:          "{{ _container_config.results | reverse | list + _container_services_modified.results | reverse | list }}"
+  loop_control:
+    label: "{{ item.item.name }}"
   tags:
-    - podman
+    - podman-deploy
     - containers
     - systemd-stop
 
-- name:       "enable container service"
+- name: "enable container service"
   systemd:
     daemon_reload: yes
     name:          "{{ item.name }}"
     enabled:       "{{ item.enabled | default(False) }}"
-  with_items: "{{ containers }}"
+  loop: "{{ containers }}"
+  loop_control:
+    label: "{{ item.name }}"
   tags:
-    - podman
+    - podman-deploy
     - containers
     - systemd-enable
 
-- name:       "start container services"
+- name: "start container services"
   systemd:
     daemon_reload: yes
     name:          "{{ item.name }}"
     state:         '{% if item.running | default(False) %}started{% else %}stopped{% endif %}'
-  with_items: "{{ containers }}"
-  when:       item.running is defined
+  loop: "{{ containers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.running is defined
   tags:
-    - podman
+    - podman-deploy
     - containers
     - systemd-start

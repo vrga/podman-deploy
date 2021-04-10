@@ -3,30 +3,57 @@
     dest:  "{{ item.1 }}"
     state: directory
   loop: "{{ _containers | subelements('manage_dirs', True) }}"
+  loop_control:
+    label: "{{ item.1 }}"
   when: item.1.startswith(container_storage_root)
   tags:
-    - podman
-    - containers
-    - volume-manage
+    - podman-deploy
 
-- name: manage volume mount files
+- name: manage volume mount files - inline content
   copy:
     dest:    "{{ item.1.path }}"
     content: "{{ item.1.content }}"
     owner:   "{{ item.0.user | default('root') }}"
     group:   "{{ item.0.group | default('root') }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
-  when: item.1.path.startswith(container_storage_root)
+  loop_control:
+    label: "{{ item.1.path }}"
+  when: item.1.path.startswith(container_storage_root) and item.1.content is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
   tags:
-    - podman
-    - containers
-    - volume-manage
+    - podman-deploy
+
+- name: manage volume mount files - template
+  template:
+    src:   "{{ item.1.template }}"
+    dest:  "{{ item.1.path }}"
+    owner: "{{ item.0.user | default('root') }}"
+    group: "{{ item.0.group | default('root') }}"
+  loop: "{{ _containers | subelements('manage_files', True) }}"
+  loop_control:
+    label: "{{ item.1.path }}"
+  when: item.1.path.startswith(container_storage_root) and item.1.template is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
+  tags:
+    - podman-deploy
+
+- name: manage volume mount files - copy remote file
+  copy:
+    remote_src: yes
+    src:        "{{ item.1.copy_from }}"
+    dest:       "{{ item.1.path }}"
+    owner:      "{{ item.0.user | default('root') }}"
+    group:      "{{ item.0.group | default('root') }}"
+  loop: "{{ _containers | subelements('manage_files', True) }}"
+  loop_control:
+    label: "{{ item.1.path }}"
+  when: item.1.path.startswith(container_storage_root) and item.1.copy_from is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
+  tags:
+    - podman-deploy
 
 - name:  chown volume mount dirs
   shell: "chown -R {{ item.0.user }}:{{ item.0.group }} {{ item.1 }}"
   loop:  "{{ _containers | subelements('manage_dirs', True) }}"
+  loop_control:
+    label: "{{ item.1 }}"
   when:  ('user' in item.0 and 'group' in item.0) and item.1.startswith(container_storage_root) and not (item.0.user == "root" or item.0.group == "root")
   tags:
-    - podman
-    - containers
-    - volume-manage
+    - podman-deploy
