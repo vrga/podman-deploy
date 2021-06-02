@@ -40,7 +40,7 @@ ExecStart=/usr/bin/podman run \
     --no-healthcheck=true \
 {% endif -%}
 {% if item.1.autoupdate is defined and item.1.autoupdate == True -%}
-  --label "io.containers.autoupdate=registry" \
+  --label "io.containers.autoupdate=image" \
 {% endif -%}
   --log-driver=journald \
 {{ item.1.extra_args | default('') }} {{ item.1.image | mandatory }} {{ item.1.parameters | default('') }}
