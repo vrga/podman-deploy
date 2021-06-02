@@ -41,7 +41,9 @@ ExecStart=/usr/bin/podman run \
 {% else %}
     --no-healthcheck=true \
 {% endif -%}
+{% if item.autoupdate is defined and item.autoupdate == True -%}
     --label "io.containers.autoupdate=registry" \
+{% endif -%}
     --log-driver=journald \
 {{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ item.parameters | default('') }}
 ExecStop=-/usr/bin/podman stop --ignore {{ item.name | mandatory }} -t 10
