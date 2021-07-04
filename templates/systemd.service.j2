@@ -10,6 +10,7 @@ After=network-online.target netfilter-persistent.service
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart={{ item.restart | default('always') }}
 RestartSec={{ item.restart_sec | default('15s') }}
+TimeoutStopSec={{ item.timeout_stop_sec | default('90s') }}
 ExecStartPre=/bin/rm -f %t/%n-pid %t/%n-cid
 ExecStartPre=-/usr/bin/podman rm {{ item.name | mandatory }}
 ExecStart=/usr/bin/podman run \
@@ -42,11 +43,10 @@ ExecStart=/usr/bin/podman run \
     --no-healthcheck=true \
 {% endif -%}
     --log-driver=journald \
-{{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ item.parameters | default('') }}
+{{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ (item.parameters | default([])) | join(' ') }}
 ExecStop=-/usr/bin/podman stop --ignore {{ item.name | mandatory }} -t 10
 ExecStopPost=-/usr/bin/podman rm --ignore -f {{ item.name | mandatory }}
 PIDFile=%t/%n-pid
-KillMode=none
 Type=forking
 
 [Install]

@@ -11,6 +11,7 @@ Before={% for container in item.containers %}pod-container-{{ container.name }}.
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
+TimeoutStopSec={{ item.timeout_stop_sec | default('90s') }}
 ExecStartPre=/bin/rm -f %t/%n-pid
 ExecStartPre=-/usr/bin/podman pod rm --ignore -f {{ item.name }}
 ExecStartPre=/usr/bin/podman pod create \
@@ -27,7 +28,6 @@ ExecStart=/usr/bin/podman pod start {{ item.name }}
 ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t 10
 ExecStopPost=/usr/bin/podman pod rm --ignore {{ item.name }}
 PIDFile=%t/%n-pid
-KillMode=none
 Type=forking
 
 [Install]

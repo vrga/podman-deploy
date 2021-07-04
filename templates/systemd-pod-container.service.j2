@@ -12,6 +12,7 @@ After=pod-{{ item.0.name | mandatory }}.service
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart={{ item.1.restart | default('always') }}
 RestartSec={{ item.1.restart_sec | default('15s') }}
+TimeoutStopSec={{ item.1.timeout_stop_sec | default('90s') }}
 ExecStartPre=/bin/rm -f %t/%n-pid %t/%n-cid
 ExecStartPre=-/usr/bin/podman rm {{ item.1.name | mandatory }}
 ExecStart=/usr/bin/podman run \
@@ -44,7 +45,6 @@ ExecStart=/usr/bin/podman run \
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n-cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n-cid
 PIDFile=%t/%n-pid
-KillMode=none
 Type=forking
 
 [Install]
