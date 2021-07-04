@@ -15,7 +15,7 @@ After={{ svc }}
 {% endfor %}
 
 # per service dependencies
-{% for svc in item.1.service_dependencies | default([]) %}
+{% for svc in (item.0.service_dependencies | default([])) + (item.1.service_dependencies | default([])) %}
 Wants={{ svc }}
 After={{ svc }}
 {% endfor %}
