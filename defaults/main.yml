@@ -1,6 +1,8 @@
 ---
 role_data_dir:          /etc/containers/ansible_podman
 
+service_dependency: []
+
 containers: [ ]
 # containers example:
 # containers:

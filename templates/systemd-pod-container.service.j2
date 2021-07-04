@@ -8,6 +8,18 @@ After=network-online.target netfilter-persistent.service
 BindsTo=pod-{{ item.0.name | mandatory }}.service
 After=pod-{{ item.0.name | mandatory }}.service
 
+# global dependencies
+{% for svc in service_dependency | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
+# per service dependencies
+{% for svc in item.1.service_dependencies | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart={{ item.1.restart | default('always') }}

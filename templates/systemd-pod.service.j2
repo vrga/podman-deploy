@@ -8,6 +8,18 @@ After=network-online.target netfilter-persistent.service
 {#Requires={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}#}
 Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ " " if not loop.last }}{% endfor %}
 
+# global dependencies
+{% for svc in service_dependency | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
+# per service dependencies
+{% for svc in item.service_dependencies | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure

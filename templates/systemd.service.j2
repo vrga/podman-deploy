@@ -6,6 +6,18 @@ Description=Podman {{ item.name | mandatory }} service
 Wants=network.target netfilter-persistent.service
 After=network-online.target netfilter-persistent.service
 
+# global dependencies
+{% for svc in service_dependency | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
+# per service dependencies
+{% for svc in item.service_dependencies | default([]) %}
+Wants={{ svc }}
+After={{ svc }}
+{% endfor %}
+
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart={{ item.restart | default('always') }}
