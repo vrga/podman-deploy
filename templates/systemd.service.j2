@@ -33,6 +33,10 @@ ExecStart=/usr/bin/podman run \
     --name {{ item.name | mandatory }} \
 {% if item.network is defined %}--network {{ item.network }} \
 {% endif -%}
+{% if item.ip is defined %}--ip {{ item.ip }} \
+{% endif -%}
+{% if item.dns is defined %}--dns {{ item.dns }} \
+{% endif -%}
 {% if item.user is defined and item.user != "" and item.group is defined and item.group != "" %}
     --user {{ item.user }}:{{ item.group }} \
 {% endif -%}

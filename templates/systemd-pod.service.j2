@@ -29,6 +29,10 @@ ExecStartPre=-/usr/bin/podman pod rm --ignore -f {{ item.name }}
 ExecStartPre=/usr/bin/podman pod create \
 {% if item.network is defined %}--network {{ item.network }} \
 {% endif -%}
+{% if item.ip is defined %}--ip {{ item.ip }} \
+{% endif -%}
+{% if item.dns is defined %}--dns {{ item.dns }} \
+{% endif -%}
 --infra-conmon-pidfile %t/%n-pid \
 {% for expose in item.exposes | default([]) -%}
     -p {{ expose }} \
