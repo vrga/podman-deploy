@@ -15,7 +15,7 @@
     content: "{{ item.1.content }}"
     owner:   "{{ item.0.user | default('root') }}"
     group:   "{{ item.0.group | default('root') }}"
-    mode:    "{{ item.0.mode | default(omit) }}"
+    mode:    "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
@@ -29,7 +29,7 @@
     dest:  "{{ item.1.path }}"
     owner: "{{ item.0.user | default('root') }}"
     group: "{{ item.0.group | default('root') }}"
-    mode:  "{{ item.0.mode | default(omit) }}"
+    mode:  "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
@@ -44,7 +44,7 @@
     dest:       "{{ item.1.path }}"
     owner:      "{{ item.0.user | default('root') }}"
     group:      "{{ item.0.group | default('root') }}"
-    mode:       "{{ item.0.mode | default(omit) }}"
+    mode:       "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
