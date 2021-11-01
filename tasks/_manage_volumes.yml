@@ -5,7 +5,6 @@
   loop: "{{ _containers | subelements('manage_dirs', True) }}"
   loop_control:
     label: "{{ item.1 }}"
-  when: item.1.startswith(container_storage_root)
   tags:
     - podman-deploy
 
@@ -19,7 +18,7 @@
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
-  when: item.1.path.startswith(container_storage_root) and item.1.content is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
+  when: item.1.content is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
   tags:
     - podman-deploy
 
@@ -33,7 +32,7 @@
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
-  when: item.1.path.startswith(container_storage_root) and item.1.template is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
+  when: item.1.template is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
   tags:
     - podman-deploy
 
@@ -48,7 +47,7 @@
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
     label: "{{ item.1.path }}"
-  when: item.1.path.startswith(container_storage_root) and item.1.copy_from is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
+  when: item.1.copy_from is defined and (item.1.once is not defined or (item.1.once is defined and not item.1.once))
   tags:
     - podman-deploy
 
@@ -57,6 +56,6 @@
   loop:  "{{ _containers | subelements('manage_dirs', True) }}"
   loop_control:
     label: "{{ item.1 }}"
-  when:  ('user' in item.0 and 'group' in item.0) and item.1.startswith(container_storage_root) and not (item.0.user == "root" or item.0.group == "root")
+  when:  ('user' in item.0 and 'group' in item.0) and not (item.0.user == "root" or item.0.group == "root")
   tags:
     - podman-deploy

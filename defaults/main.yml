@@ -30,7 +30,6 @@ containers: [ ]
 pods: [ ]
 
 
-container_storage_root: "/opt/"
 container_dirs: [ ]
 pull_disabled:          no
 always_pull:            yes
