@@ -46,5 +46,13 @@ ExecStopPost=/usr/bin/podman pod rm --ignore {{ item.name }}
 PIDFile=%t/%n-pid
 Type=forking
 
+{% if item.delegates is defined %}
+Delegate={{ item.delegates | join(' ')  }}
+{% endif %}
+{% for service_extra in item.service_extras | default([]) %}
+{{ service_extra }}
+{% endfor %}
+
+
 [Install]
 WantedBy=multi-user.target default.target

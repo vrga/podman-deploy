@@ -58,6 +58,11 @@ ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n-cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n-cid
 PIDFile=%t/%n-pid
 Type=forking
-
+{% if item.1.delegates is defined %}
+Delegate={{ item.1.delegates | join(' ')  }}
+{% endif %}
+{% for service_extra in item.1.service_extras | default([]) %}
+{{ service_extra }}
+{% endfor %}
 [Install]
 WantedBy=multi-user.target default.target
