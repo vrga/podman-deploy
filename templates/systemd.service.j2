@@ -37,6 +37,12 @@ ExecStart=/usr/bin/podman run \
 {% endif -%}
 {% if item.dns is defined %}--dns {{ item.dns }} \
 {% endif -%}
+{% if item.cpus is defined %}    --cpus "{{ item.cpus }}" \
+{% endif -%}
+{% if item.memory is defined %}    --memory "{{ item.memory }}" \
+{% endif -%}
+{% if item.memory_reservation is defined %}    --memory-reservation "{{ item.memory_reservation }}" \
+{% endif -%}
 {% if item.user is defined and item.user != "" and item.group is defined and item.group != "" %}
     --user {{ item.user }}:{{ item.group }} \
 {% endif -%}
@@ -59,7 +65,9 @@ ExecStart=/usr/bin/podman run \
     --no-healthcheck=true \
 {% endif -%}
     --log-driver=journald \
-{{ item.extra_args | default('') }} {{ item.image | mandatory }} {{ (item.parameters | default([])) | join(' ') }}
+  {{ item.extra_args | default('') }} \
+  {{ item.image | mandatory }} \
+  {{ (item.parameters | default([])) | join(' ') }}
 ExecStop=-/usr/bin/podman stop --ignore {{ item.name | mandatory }} -t 10
 ExecStopPost=-/usr/bin/podman rm --ignore -f {{ item.name | mandatory }}
 PIDFile=%t/%n-pid
