@@ -62,7 +62,7 @@ ExecStart=/usr/bin/podman run \
   {{ item.1.extra_args | default('') }} \
   {{ item.1.image | mandatory }} \
   {{ (item.1.parameters | default([])) | join(' ') }}
-ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n-cid -t 10
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n-cid -t {{ item.1.timeout_stop_sec | default('90s') }}
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n-cid
 PIDFile=%t/%n-pid
 Type=forking
