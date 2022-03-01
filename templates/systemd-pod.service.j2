@@ -41,7 +41,7 @@ ExecStartPre=/usr/bin/podman pod create \
 {% endif -%}
 --name {{ item.name | mandatory }}
 ExecStart=/usr/bin/podman pod start {{ item.name }}
-ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t 10
+ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t {{ item.timeout_stop_sec | default('90s') | regex_replace('\D+') }}
 ExecStopPost=/usr/bin/podman pod rm --ignore {{ item.name }}
 PIDFile=%t/%n-pid
 Type=forking
