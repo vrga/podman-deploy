@@ -1,0 +1,38 @@
+- name:     set container alerts
+  set_fact:
+    _alert: "{{ lookup('template', 'alert-template.yml.j2', template_vars={'service_name': item.name }) | from_yaml }}"
+  loop:     "{{ containers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: _alerts
+  tags:
+    - podman-deploy
+    - containers
+    - alerts
+
+- name: make a list of alerts
+  set_fact:
+    container_alerts:
+      groups:
+        - name: container alerts
+          rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
+  tags:
+    - podman-deploy
+    - containers
+    - alerts
+
+- debug:
+    var: container_alerts
+  tags:
+    - podman-deploy
+    - containers
+    - alerts
+
+- name: alerts to file
+  copy:
+    dest: "{{ role_data_dir }}/container-alerts.yml"
+    content: "{{ container_alerts | to_nice_yaml }}"
+  tags:
+    - podman-deploy
+    - containers
+    - alerts

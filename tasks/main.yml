@@ -41,3 +41,5 @@
 
 - import_tasks: ./systemd_containers.yml
 - import_tasks: ./systemd_pods.yml
+- import_tasks: ./manage_container_alerts.yml
+- import_tasks: ./manage_pod_alerts.yml

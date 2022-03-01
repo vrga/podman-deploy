@@ -1,0 +1,52 @@
+- name:     get pod alerts
+  set_fact:
+    _pod_alert: "{{ lookup('template', 'alert-template.yml.j2', template_vars={'service_name': 'pod-' + item.name + '.service' }) | from_yaml }}"
+  loop:     "{{ pods }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: _pod_alerts
+  tags:
+    - podman-deploy
+    - pods
+    - alerts
+
+- name:     get pod container alerts
+  set_fact:
+    _pod_container_alert: "{{ lookup('template', 'alert-template.yml.j2', template_vars={'service_name': 'pod-container-' + item.1.name + '.service' }) | from_yaml }}"
+  loop:     "{{ pods | subelements('containers') }}"
+  loop_control:
+    label: "{{ item.0.name }} | {{ item.1.name }}"
+  register: _pod_container_alerts
+  tags:
+    - podman-deploy
+    - pods
+    - alerts
+
+- name: make a dict of alerts
+  set_fact:
+    pod_alerts:
+      groups:
+        - name: pod-running
+          rules: "{{ _pod_alerts.results | map(attribute='ansible_facts._pod_alert') | list }}"
+        - name: pod-containers-running
+          rules: "{{ _pod_container_alerts.results | map(attribute='ansible_facts._pod_container_alert') | list }}"
+  tags:
+    - podman-deploy
+    - pods
+    - alerts
+
+- debug:
+    var: pod_alerts
+  tags:
+    - podman-deploy
+    - containers
+    - alerts
+
+- name: alerts to file
+  copy:
+    dest: "{{ role_data_dir }}/pod-alerts.yml"
+    content: "{{ pod_alerts | to_nice_yaml }}"
+  tags:
+    - podman-deploy
+    - pods
+    - alerts
