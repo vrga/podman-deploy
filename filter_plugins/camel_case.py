@@ -1,11 +1,9 @@
-def camel_case(string: str):
-    def _hanle_separator(input_str: str, sep: str):
-        return ''.join(word.title() for word in input_str.split(sep))
+import re
 
-    for _sep in ('-', '_', ' '):
-        string = _hanle_separator(string, _sep)
 
-    return string
+def camel_case(input_string: str):
+    reg = re.compile(r"([\w]*)(?:[\s\-_]*)")
+    return re.sub(reg, lambda word: word.group(1).capitalize(), input_string)
 
 
 class FilterModule(object):
