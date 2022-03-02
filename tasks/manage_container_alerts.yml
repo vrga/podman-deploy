@@ -14,19 +14,19 @@
   set_fact:
     container_alerts:
       groups:
-        - name: container alerts
+        - name: ContainersRunning
           rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
   tags:
     - podman-deploy
     - containers
     - alerts
 
-- debug:
-    var: container_alerts
-  tags:
-    - podman-deploy
-    - containers
-    - alerts
+#- debug:
+#    var: container_alerts
+#  tags:
+#    - podman-deploy
+#    - containers
+#    - alerts
 
 - name: alerts to file
   copy:

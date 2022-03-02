@@ -1,4 +1,4 @@
-alert: {{ service_name }} down
+alert: {{ service_name | camel_case }}Down
 expr: 'systemd_units_active_code{active="active",sub="running",name="{{ service_name }}",host="{{ ansible_fqdn }}"} != 1'
 for:  1m
 labels:

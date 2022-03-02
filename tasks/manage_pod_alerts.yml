@@ -26,21 +26,21 @@
   set_fact:
     pod_alerts:
       groups:
-        - name: pod-running
+        - name: PodsRunning
           rules: "{{ _pod_alerts.results | map(attribute='ansible_facts._pod_alert') | list }}"
-        - name: pod-containers-running
+        - name: PodsContainersRunning
           rules: "{{ _pod_container_alerts.results | map(attribute='ansible_facts._pod_container_alert') | list }}"
   tags:
     - podman-deploy
     - pods
     - alerts
 
-- debug:
-    var: pod_alerts
-  tags:
-    - podman-deploy
-    - containers
-    - alerts
+#- debug:
+#    var: pod_alerts
+#  tags:
+#    - podman-deploy
+#    - containers
+#    - alerts
 
 - name: alerts to file
   copy:
