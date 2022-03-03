@@ -1,4 +1,4 @@
-from .camel_case import camel_case
+from filter_plugins.camel_case import camel_case
 
 assert camel_case('test-string') == 'TestString'
 assert camel_case('test string') == 'TestString'
