@@ -4,6 +4,7 @@
   loop:     "{{ containers }}"
   loop_control:
     label: "{{ item.name }}"
+  when: item.enabled and item.running
   register: _alerts
   tags:
     - podman-deploy
