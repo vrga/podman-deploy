@@ -17,6 +17,7 @@
       groups:
         - name: ContainersRunning
           rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
+          concurrency: 4
   tags:
     - podman-deploy
     - containers

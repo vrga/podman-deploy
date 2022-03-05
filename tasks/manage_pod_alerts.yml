@@ -11,13 +11,27 @@
     - pods
     - alerts
 
+- debug:
+    msg: "{{ _pod_alerts | to_json }}"
+  tags:
+    - podman-deploy
+    - containers
+    - alerts
+
+#- pause:
+#    prompt: "{{ _pod_alerts | to_json }}"
+#  tags:
+#    - podman-deploy
+#    - containers
+#    - alerts
+
 - name:     get pod container alerts
   set_fact:
     _pod_container_alert: "{{ lookup('template', 'alert-template.yml.j2', template_vars={'service_name': 'pod-container-' + item.1.name + '.service' }) | from_yaml }}"
   loop:     "{{ pods | subelements('containers') }}"
   loop_control:
     label: "{{ item.0.name }} | {{ item.1.name }}"
-  when: item.0.enabled and item.1.enabled and item.0.running and item.1.running
+  when: item.1.enabled and item.1.running
   register: _pod_container_alerts
   tags:
     - podman-deploy
@@ -29,20 +43,17 @@
     pod_alerts:
       groups:
         - name: PodsRunning
-          rules: "{{ _pod_alerts.results | map(attribute='ansible_facts._pod_alert') | list }}"
+          rules: "{{ _pod_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_alert') | list }}"
+          concurrency: 4
         - name: PodsContainersRunning
-          rules: "{{ _pod_container_alerts.results | map(attribute='ansible_facts._pod_container_alert') | list }}"
+          rules: "{{ _pod_container_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_container_alert') | list }}"
+          concurrency: 4
   tags:
     - podman-deploy
     - pods
     - alerts
 
-#- debug:
-#    var: pod_alerts
-#  tags:
-#    - podman-deploy
-#    - containers
-#    - alerts
+
 
 - name: alerts to file
   copy:

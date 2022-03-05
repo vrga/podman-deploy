@@ -1,5 +1,6 @@
 alert: {{ service_name | camel_case }}Down
-expr: 'systemd_units_active_code{active="active",sub="running",name="{{ service_name }}",host="{{ ansible_fqdn }}"} != 1'
+expr: systemd_units_sub_code{name="{{ service_name }}",host="{{ ansible_fqdn }}"} != 0
+
 for:  1m
 labels:
   severity: page
