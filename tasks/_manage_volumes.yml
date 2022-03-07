@@ -1,6 +1,9 @@
 - name: manage volume mount dirs
   file:
     dest:  "{{ item.1 }}"
+    owner: "{{ item.0.user | default('root') }}"
+    group: "{{ item.0.group | default('root') }}"
+    mode:  "{{ item.1.mode | default(omit) }}"
     state: directory
   loop: "{{ _containers | subelements('manage_dirs', True) }}"
   loop_control:
