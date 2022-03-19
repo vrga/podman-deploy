@@ -1,13 +1,26 @@
-- name: manage volume mount dirs
+- name: manage volume mount dirs - direct path
   file:
     dest:  "{{ item.1 }}"
-    owner: "{{ item.0.user | default('root') }}"
-    group: "{{ item.0.group | default('root') }}"
-    mode:  "{{ item.1.mode | default(omit) }}"
     state: directory
   loop: "{{ _containers | subelements('manage_dirs', True) }}"
   loop_control:
     label: "{{ item.1 }}"
+  when: item.1 is not mapping
+  tags:
+    - podman-deploy
+
+- name: manage volume mount dirs - dict
+  file:
+    state: directory
+    dest:  "{{ item.1.path }}"
+    owner: "{{ item.1.owner  | default('root') }}"
+    group: "{{ item.1.group | default('root') }}"
+    mode:  "{{ item.1.mode | default(omit) }}"
+    recurse: "{{ item.1.recurse | default(omit) }}"
+  loop: "{{ _containers | subelements('manage_dirs', True) }}"
+  loop_control:
+    label: "{{ item.1 }}"
+  when: item.1 is mapping
   tags:
     - podman-deploy
 
@@ -15,8 +28,8 @@
   copy:
     dest:    "{{ item.1.path }}"
     content: "{{ item.1.content }}"
-    owner:   "{{ item.0.user | default('root') }}"
-    group:   "{{ item.0.group | default('root') }}"
+    owner:   "{{ item.1.owner  | default(item.0.user)  | default('root') }}"
+    group:   "{{ item.1.group | default(item.0.group) | default('root') }}"
     mode:    "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
@@ -29,8 +42,8 @@
   template:
     src:   "{{ item.1.template }}"
     dest:  "{{ item.1.path }}"
-    owner: "{{ item.0.user | default('root') }}"
-    group: "{{ item.0.group | default('root') }}"
+    owner: "{{ item.1.owner  | default(item.0.user)  | default('root') }}"
+    group: "{{ item.1.group | default(item.0.group) | default('root') }}"
     mode:  "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
@@ -44,8 +57,8 @@
     remote_src: yes
     src:        "{{ item.1.copy_from }}"
     dest:       "{{ item.1.path }}"
-    owner:      "{{ item.0.user | default('root') }}"
-    group:      "{{ item.0.group | default('root') }}"
+    owner:      "{{ item.1.owner  | default(item.0.user)  | default('root') }}"
+    group:      "{{ item.1.group | default(item.0.group) | default('root') }}"
     mode:       "{{ item.1.mode | default(omit) }}"
   loop: "{{ _containers | subelements('manage_files', True) }}"
   loop_control:
