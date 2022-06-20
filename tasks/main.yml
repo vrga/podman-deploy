@@ -29,6 +29,21 @@
     - podman-deploy
     - images
 
+- name: set target to allow easy bringup and teardown of all units managed by this
+  template:
+    src:  "podman.target.j2"
+    dest: '/etc/systemd/system/podman.target'
+    mode: 0664
+
+- name: systemd reload daemon
+  command: 'systemctl daemon-reload'
+
+- name: enable podman target
+  systemd:
+    name: podman.target
+    state: started
+    enabled: yes
+
 - name: set up config dir for this role
   file:
     state: directory

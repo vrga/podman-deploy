@@ -11,12 +11,12 @@
     - pods
     - alerts
 
-- debug:
-    msg: "{{ _pod_alerts | to_json }}"
-  tags:
-    - podman-deploy
-    - containers
-    - alerts
+#- debug:
+#    msg: "{{ _pod_alerts | to_json }}"
+#  tags:
+#    - podman-deploy
+#    - containers
+#    - alerts
 
 #- pause:
 #    prompt: "{{ _pod_alerts | to_json }}"

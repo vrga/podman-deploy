@@ -3,10 +3,13 @@
 [Unit]
 Description=Podman pod-{{ item.name | mandatory }}.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network.target netfilter-persistent.service
-After=network-online.target netfilter-persistent.service
+Wants=network.target netfilter-persistent.service podman.target
+After=network-online.target netfilter-persistent.service podman.target
 {#Requires={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}#}
 Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ " " if not loop.last }}{% endfor %}
+
+PartOf=podman.target
+StopWhenUnneeded=true
 
 # global dependencies
 {% for svc in service_dependency | default([]) %}
@@ -55,4 +58,4 @@ Delegate={{ item.delegates | join(' ')  }}
 
 
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=podman.target

@@ -6,6 +6,9 @@ Description=Podman {{ item.name | mandatory }} service
 Wants=network.target netfilter-persistent.service
 After=network-online.target netfilter-persistent.service
 
+PartOf=podman.target
+StopWhenUnneeded=true
+
 # global dependencies
 {% for svc in service_dependency | default([]) %}
 Wants={{ svc }}
@@ -79,4 +82,4 @@ Delegate={{ item.delegates | join(' ')  }}
 {% endfor %}
 
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=podman.target

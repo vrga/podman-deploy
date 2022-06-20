@@ -3,10 +3,13 @@
 
 [Unit]
 Description=Podman pod: {{ item.0.name | mandatory }} container: {{ item.1.name | mandatory }}
-Wants=network.target netfilter-persistent.service
-After=network-online.target netfilter-persistent.service
+Wants=network.target netfilter-persistent.service podman.target
+After=network-online.target netfilter-persistent.service podman.target
 BindsTo=pod-{{ item.0.name | mandatory }}.service
 After=pod-{{ item.0.name | mandatory }}.service
+
+PartOf=podman.target
+StopWhenUnneeded=true
 
 # global dependencies
 {% for svc in service_dependency | default([]) %}
@@ -72,4 +75,4 @@ Delegate={{ item.1.delegates | join(' ')  }}
 {{ service_extra }}
 {% endfor %}
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=podman.target
