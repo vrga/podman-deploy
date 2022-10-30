@@ -1,0 +1,7 @@
+[Unit]
+Description=Podman global target. Used to start up and shut down _all_ configured podman services.
+Documentation=man:podman-generate-systemd(1)
+After=network.target netfilter-persistent.service multi-user.target
+
+[Install]
+WantedBy=multi-user.target

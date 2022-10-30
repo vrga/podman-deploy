@@ -1,5 +1,7 @@
 ---
 role_data_dir:          /etc/containers/ansible_podman
+alerts_dir : "{{ role_data_dir }}/alerts"
+alert_name_suffix: "default"
 
 service_dependency: []
 

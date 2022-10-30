@@ -12,12 +12,15 @@
     - alerts
 
 - name: make a list of alerts
+  vars:
+    _alert_rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
   set_fact:
     container_alerts:
       groups:
-        - name: ContainersRunning
-          rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
+        - name: "ContainersRunning{{ alert_name_suffix | camel_case }}"
+          rules: "{{ _alert_rules }}"
           concurrency: 4
+  when: containers
   tags:
     - podman-deploy
     - containers
@@ -32,8 +35,9 @@
 
 - name: alerts to file
   copy:
-    dest: "{{ role_data_dir }}/container-alerts.yml"
+    dest: "{{ alerts_dir }}/container-{{ alert_name_suffix }}-alerts.yml"
     content: "{{ container_alerts | to_nice_yaml }}"
+  when: containers
   tags:
     - podman-deploy
     - containers

@@ -3,8 +3,6 @@
 
 [Unit]
 Description=Podman {{ item.name | mandatory }} service
-Wants=network.target netfilter-persistent.service
-After=network-online.target netfilter-persistent.service
 
 PartOf=podman.target
 StopWhenUnneeded=true

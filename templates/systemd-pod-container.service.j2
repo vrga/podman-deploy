@@ -3,8 +3,6 @@
 
 [Unit]
 Description=Podman pod: {{ item.0.name | mandatory }} container: {{ item.1.name | mandatory }}
-Wants=network.target netfilter-persistent.service podman.target
-After=network-online.target netfilter-persistent.service podman.target
 BindsTo=pod-{{ item.0.name | mandatory }}.service
 After=pod-{{ item.0.name | mandatory }}.service
 
@@ -74,5 +72,6 @@ Delegate={{ item.1.delegates | join(' ')  }}
 {% for service_extra in item.1.service_extras | default([]) %}
 {{ service_extra }}
 {% endfor %}
+
 [Install]
 WantedBy=podman.target

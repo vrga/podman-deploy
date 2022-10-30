@@ -3,8 +3,6 @@
 [Unit]
 Description=Podman pod-{{ item.name | mandatory }}.service
 Documentation=man:podman-generate-systemd(1)
-Wants=network.target netfilter-persistent.service podman.target
-After=network-online.target netfilter-persistent.service podman.target
 {#Requires={% for container in item.containers %}pod-container-{{ container.name }}.service{{ "," if not loop.last }}{% endfor %}#}
 Before={% for container in item.containers %}pod-container-{{ container.name }}.service{{ " " if not loop.last }}{% endfor %}
 
@@ -42,6 +40,7 @@ ExecStartPre=/usr/bin/podman pod create \
 {% endfor -%}
 {% if item.share is defined %} --share {{ item.share }} \
 {% endif -%}
+{{ item.extra_args | default('') }} \
 --name {{ item.name | mandatory }}
 ExecStart=/usr/bin/podman pod start {{ item.name }}
 ExecStop=/usr/bin/podman pod stop --ignore {{ item.name }} -t {{ item.timeout_stop_sec | default('90s') | regex_replace('\D+') }}

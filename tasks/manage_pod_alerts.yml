@@ -42,12 +42,13 @@
   set_fact:
     pod_alerts:
       groups:
-        - name: PodsRunning
+        - name: "PodsRunning{{ alert_name_suffix | camel_case }}"
           rules: "{{ _pod_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_alert') | list }}"
           concurrency: 4
-        - name: PodsContainersRunning
+        - name: "PodsContainersRunning{{ alert_name_suffix | camel_case }}"
           rules: "{{ _pod_container_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_container_alert') | list }}"
           concurrency: 4
+  when: pods
   tags:
     - podman-deploy
     - pods
@@ -57,8 +58,9 @@
 
 - name: alerts to file
   copy:
-    dest: "{{ role_data_dir }}/pod-alerts.yml"
+    dest: "{{ alerts_dir }}/pod-{{ alert_name_suffix }}-alerts.yml"
     content: "{{ pod_alerts | to_nice_yaml }}"
+  when: pods
   tags:
     - podman-deploy
     - pods

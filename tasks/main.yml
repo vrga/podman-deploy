@@ -54,6 +54,17 @@
     - podman-deploy
     - configure
 
+- name: set up config dir for this role
+  file:
+    state: directory
+    path:  "{{ alerts_dir }}"
+    owner: root
+    group: root
+  tags:
+    - podman-deploy
+    - configure
+    - alerts
+
 - import_tasks: ./systemd_containers.yml
 - import_tasks: ./systemd_pods.yml
 - import_tasks: ./manage_container_alerts.yml
