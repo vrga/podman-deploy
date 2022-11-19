@@ -5,6 +5,8 @@
   tags:
     - podman-deploy
     - images
+    - pods
+    - containers
 
 - name:          check if image exists.
   shell:         'podman image exists "{{ item }}"'
@@ -16,6 +18,8 @@
   tags:
     - podman-deploy
     - images
+    - containers
+    - pods
 
 - name:        "pull images" # noqa 301
   shell:       'podman image pull "{{ item.item }}"'
@@ -28,6 +32,8 @@
   tags:
     - podman-deploy
     - images
+    - containers
+    - pods
 
 - name: set target to allow easy bringup and teardown of all units managed by this
   template:
