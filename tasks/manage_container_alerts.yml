@@ -13,7 +13,7 @@
 
 - name: make a list of alerts
   vars:
-    _alert_rules: "{{ _alerts.results | map(attribute='ansible_facts._alert') | list }}"
+    _alert_rules: "{{ _alerts.results | selectattr('ansible_facts','defined') | map(attribute='ansible_facts._alert') | list }}"
   set_fact:
     container_alerts:
       groups:

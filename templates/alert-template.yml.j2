@@ -1,8 +1,9 @@
 alert: {{ service_name | camel_case }}Down
-expr: systemd_units_sub_code{name="{{ service_name }}",host="{{ ansible_fqdn }}"} != 0
+expr: systemd_units_sub_code{name="{{ service_name }}.service",host="{{ ansible_fqdn }}"} != 0
 
 for:  1m
 labels:
   severity: page
 annotations:
-  summary: {{ service_name }} {{ ansible_fqdn }} running
+  summary: {{ service_name }} on {{ ansible_fqdn }} is not running
+  description: {{ service_name }} on {{ ansible_fqdn }} is not running

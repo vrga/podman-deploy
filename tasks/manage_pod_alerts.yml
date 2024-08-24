@@ -43,10 +43,10 @@
     pod_alerts:
       groups:
         - name: "PodsRunning{{ alert_name_suffix | camel_case }}"
-          rules: "{{ _pod_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_alert') | list }}"
+          rules: "{{ _pod_alerts.results | rejectattr('skipped', 'defined') | selectattr('ansible_facts','defined') | map(attribute='ansible_facts._pod_alert') | list }}"
           concurrency: 4
         - name: "PodsContainersRunning{{ alert_name_suffix | camel_case }}"
-          rules: "{{ _pod_container_alerts.results | rejectattr('skipped', 'defined') | map(attribute='ansible_facts._pod_container_alert') | list }}"
+          rules: "{{ _pod_container_alerts.results | rejectattr('skipped', 'defined') | selectattr('ansible_facts','defined') | map(attribute='ansible_facts._pod_container_alert') | list }}"
           concurrency: 4
   when: pods
   tags:
