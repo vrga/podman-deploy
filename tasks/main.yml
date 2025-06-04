@@ -11,7 +11,7 @@
 
 - name: combine image lists and remove non-unique entries
   set_fact:
-    _required_images: "{{ _container_images + _pod_images | sort | unique }}"
+    _required_images: "{{ (_container_images + _pod_images) | sort | unique }}"
   tags:
     - podman-deploy
     - images
