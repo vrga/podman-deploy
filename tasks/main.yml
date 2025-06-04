@@ -1,7 +1,17 @@
 ---
-- name: set required images
+- name: set required images for containers and pods
   set_fact:
-    _required_images: "{{ (containers | json_query('[].image') | list + pods | json_query('[].containers[].image') | list) | unique }}"
+    _container_images: '{{  containers | default([]) | map(attribute="image") }}'
+    _pod_images: '{{ pods | default([]) | map(attribute="containers") | flatten(levels=1) | map(attribute="image") }}'
+  tags:
+    - podman-deploy
+    - images
+    - pods
+    - containers
+
+- name: combine image lists and remove non-unique entries
+  set_fact:
+    _required_images: "{{ _container_images + _pod_images | sort | unique }}"
   tags:
     - podman-deploy
     - images
